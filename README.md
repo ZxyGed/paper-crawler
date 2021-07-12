@@ -1,8 +1,10 @@
 paperCrawler能够根据关键词爬取顶会论文的摘要以及PDF，采用selenium/requests/pyquery，运行前需要确认运行环境的google版本，并从[ChromDriver Downloads](https://chromedriver.chromium.org/downloads)下载对应的ChromeDriver，该项目目前仅支持ICLR/ICML/NIPS三大会议，项目的结构以及运行结果截图如下：
 
-![image-20210627152515161](C:%5CUsers%5C15487%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20210627152515161.png)
+![image-20210712152352553](https://cdn.jsdelivr.net/gh/ZxyGed/pic-warehouse/img/image-20210712152352553.png)
 
-![image-20210627153059100](C:%5CUsers%5C15487%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20210627153059100.png)
+![image-20210712153205074](https://cdn.jsdelivr.net/gh/ZxyGed/pic-warehouse/img/image-20210712153205074.png)
+
+需要注意的是，如果爬取PDF失败，报错 ‘ValueError: check_hostname requires server_hostname’，需要把梯子关了
 
 结果的文件结构：来源/年份/关键词
 

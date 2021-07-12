@@ -10,14 +10,15 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-class paperCrawler():
+class PaperCrawler():
     def __init__(self, keyword, source, year, saveDir, browser):
         self.keyword = keyword
         self.source = source
         self.year = year
         self.saveDir = saveDir
         self.browser = browser
-        self.base = '%s/%s/%s/%s' % (self.saveDir, self.source, self.year, self.keyword)
+        self.base = '%s/%s/%s/%s' % (self.saveDir,
+                                     self.source, self.year, self.keyword)
         if not os.path.exists(self.base):
             os.makedirs(self.base)
         open('%s/fetchedAbsList.md' % self.base, 'a').close()
@@ -35,19 +36,22 @@ class paperCrawler():
             os.makedirs(folder)
         with open('%s/%s' % (folder, fileName), 'w', encoding='utf-8') as f:
             paperListStr = json.dumps(paperList)
-            json.dump(paperListStr, f)
+            json.dump(paperList, f)
+            # json.dump(paperListStr, f)
 
     def checkTotalPaperList(self):
         '''
         查看是否保存有该会议概念的完整论文列表，如果有就读取并返回，否则返回空列表
         :return: List-会议完整的论文列表
         '''
-        listLoc = '%s/%s/%s/totalPaperList.json' % (self.saveDir, self.source, self.year)
+        listLoc = '%s/%s/%s/totalPaperList.json' % (
+            self.saveDir, self.source, self.year)
         if not os.path.exists(listLoc):
             return []
         with open(listLoc, 'r', encoding='utf-8') as f:
-            paperListStr = json.load(f)
-            paperList = json.loads(paperListStr)
+            paperList = json.load(f)
+            # paperListStr = json.load(f)
+            # paperList = json.loads(paperListStr)
         return paperList
 
     def filterPaper(self, paperList):
@@ -82,7 +86,8 @@ class paperCrawler():
             paperList = self.getNIPSPaperList()
         else:
             raise Warning("source(%s) not supported!" % self.source)
-        folder = '%s/%s/%s/%s' % (self.saveDir, self.source, self.year, self.keyword)
+        folder = '%s/%s/%s/%s' % (self.saveDir,
+                                  self.source, self.year, self.keyword)
         fileName = 'paperList.json'
         self.savePaperList(folder, fileName, paperList)
         return paperList
@@ -94,7 +99,8 @@ class paperCrawler():
         :return: List-ICLR中根据关键词筛选后的论文列表
         '''
         totalPaperList = []
-        self.browser.get('https://openreview.net/group?id=ICLR.cc/%s/Conference' % (self.year))
+        self.browser.get(
+            'https://openreview.net/group?id=ICLR.cc/%s/Conference' % (self.year))
         wait = WebDriverWait(self.browser, 20)
         wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.list-unstyled li h4')),
                    message='oral papers not present')
@@ -148,7 +154,8 @@ class paperCrawler():
         爬取ICML完整的论文列表，保存并根据关键词筛选符合条件的论文并返回
         :return: List-ICML中根据关键词筛选后的论文列表
         '''
-        self.browser.get('https://icml.cc/Conferences/%s/AcceptedPapersInitial' % self.year)
+        self.browser.get(
+            'https://icml.cc/Conferences/%s/AcceptedPapersInitial' % self.year)
         # pq得到的内容即使在cell最后一行也必须print才能看见
         paperTitles = pq(self.browser.page_source)('div .col-xs-9 b')
         totalPaperList = [paper.text() for paper in paperTitles.items()]
@@ -173,7 +180,8 @@ class paperCrawler():
         inputBox = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, '#query')),
                               message='inputBox not present')
         submitButton = wait.until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.breathe-vertical .field button')),
+            EC.presence_of_all_elements_located(
+                (By.CSS_SELECTOR, '.breathe-vertical .field button')),
             message='submit button not present')
         if len(inputBox) != 1:
             raise Exception('seletor of inputBox is inaccurate!')
@@ -205,14 +213,17 @@ class paperCrawler():
                         try:
                             # 爬取PDF文件
                             pdf = requests.get('%s.pdf' % pdflink)
-                        except:
+
+                        except Exception as e:
+                            print(e)
                             print('getpdf of %s fail' % paper)
                             # 爬取PDF失败，将结果写入fail2pdf.md
                             with open('%s/fail2pdf.md' % (self.base), 'a', encoding='utf-8') as f:
                                 f.write('%s\n' % (paper))
                             return False
                         # 爬取成功，将PDF保存到指定位置，注意PDF文件名中不能包含':','?','/'等
-                        pdfName = paper.replace(':', '_').replace('?', '').replace('/', '_')
+                        pdfName = paper.replace(':', '_').replace(
+                            '?', '').replace('/', '_')
                         with open('%s/%s (%s %s).pdf' % (self.base, pdfName, self.source, self.year), 'wb') as f:
                             f.write(pdf.content)
                         # 将已爬取的文章名称保存到fetchPDFList.md中，防止重复爬取
@@ -223,7 +234,8 @@ class paperCrawler():
                     with open('%s/fetchedAbsList.md' % (self.base), 'r', encoding='utf-8') as f:
                         records = f.readlines()
                     if paper + '\n' not in records:
-                        abstractlink = res.find('.list-title a').eq(0).attr('href')
+                        abstractlink = res.find(
+                            '.list-title a').eq(0).attr('href')
                         try:
                             # 爬取论文摘要
                             page = requests.get(abstractlink)
@@ -233,10 +245,12 @@ class paperCrawler():
                             with open('%s/fail2abstract.md' % (self.base), 'a', encoding='utf-8') as f:
                                 f.write('%s\n' % (paper))
                             return False
-                        abstract = pq(page.text.encode('utf-8'))('#abs .abstract').text()
+                        abstract = pq(page.text.encode('utf-8')
+                                      )('#abs .abstract').text()
                         # 爬取成功，将摘要写入abstract.md
                         with open('%s/abstract.md' % (self.base), 'a', encoding='utf-8') as f:
-                            f.write('<h3>%s (%s %s)</h3>\n' % (paper, self.source, self.year))
+                            f.write('<h3>%s (%s %s)</h3>\n' %
+                                    (paper, self.source, self.year))
                             f.write('%s\n' % abstract)
                         # 将已爬取摘要的论文写入fetchAbsList.md，防止重复爬取
                         with open('%s/fetchedAbsList.md' % (self.base), 'a', encoding='utf-8') as f:
@@ -255,13 +269,15 @@ class paperCrawler():
         '''
         numPaper = len(paperList)
         for paper in paperList:
-            print('processing %s, %s paper of %s %s left' % (paper, numPaper, self.source, self.year))
+            print('processing %s, %s paper of %s %s left' %
+                  (paper, numPaper, self.source, self.year))
             try:
                 self.fetchPaper(paper, self.source, self.year)
             # 将除fetchPaper中没有找到论文/爬取摘要失败/爬取PDF失败的异常记录到log.md文件中
             except Exception as e:
                 with open('%s/log.md' % (self.base), 'a', encoding='utf-8') as f:
-                    f.write('%s (%s %s) %s\n' % (paper, self.source, self.year, repr(e)))
+                    f.write('%s (%s %s) %s\n' %
+                            (paper, self.source, self.year, repr(e)))
             time.sleep(3)
             numPaper -= 1
         print('papers of %s %s complete' % (self.source, self.year))
@@ -309,8 +325,10 @@ if __name__ == '__main__':
     '''
     如果要更新totalPaperList,记得remove掉'saveDir/source/year'下的内容
     '''
-    SAVEDIR = 'paper-warehouse'
-    KEYWORDS = ['multi-view', 'tensor', 'Graph learning', 'graph neural network', 'cluster']
+    # SAVEDIR = 'E:/paper-warehouse'
+    SAVEDIR = 'E:/paper-warehouse'
+    KEYWORDS = ['multi-view', 'tensor', 'Graph learning',
+                'graph neural network', 'cluster']
     # KEYWORDS=['graph neural network']
     # NIPS2021目前还没出
     ICMLyear, ICLRyear, NIPSyear = 2020, 2020, 2019
@@ -324,7 +342,8 @@ if __name__ == '__main__':
     options.add_argument('enable-webgl')
     # 如果想要监测浏览器运行，注释掉这一项
     # options.add_argument('headless')
-    options.add_experimental_option("excludeSwitches", ['enable-automation', 'enable-logging'])
+    options.add_experimental_option(
+        "excludeSwitches", ['enable-automation', 'enable-logging'])
     options.add_experimental_option('useAutomationExtension', False)
     options.add_experimental_option("prefs",
                                     {"profile.password_manager_enabled": False, "credentials_enable_service": False})
@@ -334,9 +353,9 @@ if __name__ == '__main__':
 
     try:
         for KEYWORD in KEYWORDS:
-            paperCrawler(KEYWORD, 'ICLR', ICLRyear, SAVEDIR, browser).crawl()
-            paperCrawler(KEYWORD, 'ICML', ICMLyear, SAVEDIR, browser).crawl()
-            paperCrawler(KEYWORD, 'NIPS', NIPSyear, SAVEDIR, browser).crawl()
+            PaperCrawler(KEYWORD, 'ICLR', ICLRyear, SAVEDIR, browser).crawl()
+            PaperCrawler(KEYWORD, 'ICML', ICMLyear, SAVEDIR, browser).crawl()
+            PaperCrawler(KEYWORD, 'NIPS', NIPSyear, SAVEDIR, browser).crawl()
     except Exception as e:
         print(repr(e))
     finally:
